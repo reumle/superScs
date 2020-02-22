@@ -2,7 +2,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Pantelis Sopasakis (https://alphaville.github.io),
- *                    Krina Menounou (https://www.linkedin.com/in/krinamenounou), 
+ *                    Krina Menounou (https://www.linkedin.com/in/krinamenounou),
  *                    Panagiotis Patrinos (http://homes.esat.kuleuven.be/~ppatrino)
  * Copyright (c) 2012 Brendan O'Donoghue (bodonoghue85@gmail.com)
  *
@@ -23,7 +23,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  */
 #include "linAlg.h"
 #include <math.h>
@@ -32,7 +32,7 @@
 
 #ifdef LAPACK_LIB_FOUND
 
-#define SCS_NO_SUFFIX 
+#define SCS_NO_SUFFIX
 #define SCS_IAMAX stitch__(i, BLAS(amax), SCS_NO_SUFFIX)
 
 extern blasint SCS_IAMAX(
@@ -137,7 +137,7 @@ extern void LPCK(gelss)(
 #define SCS_DGEMM_NN_MR  4
 #define SCS_DGEMM_NN_NR  4
 
-/* 
+/*
  *   Local buffers for storing panels from A, B and C
  */
 static double SCS_DGEMM_NN__A[SCS_DGEMM_NN_MC*SCS_DGEMM_NN_KC];
@@ -414,7 +414,7 @@ scs_dgemm_macro_kernel(int mc,
  * \f[
  *    C \leftarrow \beta C + \alpha A B
  * \f]
- * 
+ *
  * @param m number of rows of matrix \f$A\f$
  * @param n number of columns of matrix \f$B\f$
  * @param k number of rows of matrix \f$B\f$ (columns of \f$A\f$)
@@ -429,21 +429,21 @@ scs_dgemm_macro_kernel(int mc,
  * @param C pointer to matrix \f$C\f$
  * @param incRowC increment in traversing the rows of \f$C\f$
  * @param incColC increment in traversing the columns of \f$C\f$
- * 
+ *
  * @see ::scs_matrix_multiply
- * 
- * \note The implementation of this method is that of 
+ *
+ * \note The implementation of this method is that of
  * [ULMBLAS](http://apfel.mathematik.uni-ulm.de/~lehn/sghpc/gemm/page13/index.html).
- * 
- * \note The original source code is available at 
+ *
+ * \note The original source code is available at
  * [this link](http://apfel.mathematik.uni-ulm.de/~lehn/sghpc/gemm/page13/index.html).
- * 
+ *
  * \note The [ULMBLAS project](https://github.com/michael-lehn/ulmBLAS) is available
- * on github and is licensed with the 
+ * on github and is licensed with the
  * [new BSD licence](https://github.com/michael-lehn/ulmBLAS/blob/master/LICENSE).
- * 
+ *
  * \warning This function works only with \c double precision data.
- * 
+ *
  */
 void
 scs_dgemm_nn(int m,
@@ -621,7 +621,7 @@ void scs_scale_array(scs_float * RESTRICT a, const scs_float b, scs_int len) {
         case 1: a[j] *= b;
         case 0:;
     }
-#endif    
+#endif
 }
 
 /* x'*y */
@@ -710,7 +710,9 @@ void scs_add_scaled_array(
         const scs_float * RESTRICT b,
         scs_int len,
         const scs_float sc) {
-#ifdef LAPACK_LIB_FOUND    
+#ifdef LAPACK_LIB_FOUND
+//    scs_printf( "LAPACK a b %d,%d  et len sc %d %d\n" ,sizeof(a),sizeof(b),len,sizeof(sc)) ;
+//   scs_printf( "LAPACK a b %f,%f  et len sc %d %f\n" ,a,b,len,sc) ;
     blasint one = 1;
     const blasint len_ = len;
     scs_axpy_(&len_, &sc, b, &one, a, &one);

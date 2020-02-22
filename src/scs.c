@@ -2,7 +2,7 @@
  * The MIT License (MIT)
  *
  * Copyright (c) 2017 Pantelis Sopasakis (https://alphaville.github.io),
- *                    Krina Menounou (https://www.linkedin.com/in/krinamenounou), 
+ *                    Krina Menounou (https://www.linkedin.com/in/krinamenounou),
  *                    Panagiotis Patrinos (http://homes.esat.kuleuven.be/~ppatrino)
  * Copyright (c) 2012 Brendan O'Donoghue (bodonoghue85@gmail.com)
  *
@@ -23,7 +23,7 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
- * 
+ *
  */
 #include "scs.h"
 #include "normalize.h"
@@ -40,7 +40,7 @@
 #define SCS_INDETERMINATE_TOL 1e-9
 
 /**
- *  \brief Structure to hold residual information (unnormalized) 
+ *  \brief Structure to hold residual information (unnormalized)
  */
 struct scs_residuals {
     /**
@@ -49,7 +49,7 @@ struct scs_residuals {
     scs_int last_iter;
     /**
      * \brief Dual residual
-     * 
+     *
      * \f[
      * \text{resdual} = \frac{E(A'y + \tau c)}{\tau(1+\|c\|)\cdot \text{scale}_c\cdot \text{scale}}
      * \f]
@@ -57,7 +57,7 @@ struct scs_residuals {
     scs_float res_dual;
     /**
      * \brief Primal residual
-     * 
+     *
      * \f[
      *  \text{respri} = \frac{\|D(Ax+s-\tau b)\|}{\tau(1+\|b\|)(\text{scale}_b\cdot \text{scale})}
      * \f]
@@ -65,7 +65,7 @@ struct scs_residuals {
     scs_float res_pri;
     /**
      * \brief Infeasibility residual
-     * 
+     *
      * \f[
      *  \text{infres} = -\frac{\|Db\| \|EA'y\|}{b'y \cdot \text{scale}}
      * \f]
@@ -73,15 +73,15 @@ struct scs_residuals {
     scs_float res_infeas;
     /**
      * \brief Unboundedness
-     * 
+     *
      * \f[
      * \text{unbdd} = -\frac{\|Ec\| \|D(Ax+s)}{c'x\cdot \text{scale}}
      * \f]
      */
     scs_float res_unbdd;
     /**
-     * \brief Relative duality gap defined as 
-     * 
+     * \brief Relative duality gap defined as
+     *
      * \f[
      *  \text{relgap} = \frac{c'x + b'y}{1+|c'x|+|b'y|}
      * \f]
@@ -819,6 +819,7 @@ static scs_int scs_solved(
         ScsSolution * RESTRICT sol,
         ScsInfo * RESTRICT info,
         scs_float tau) {
+		scs_printf("into 	scs_solve \n");
     scs_scale_array(sol->x, 1.0 / tau, work->n);
     scs_scale_array(sol->y, 1.0 / tau, work->m);
     scs_scale_array(sol->s, 1.0 / tau, work->m);
@@ -977,6 +978,7 @@ static void scs_get_solution(
         scs_unnormalize_sol(work, sol);
     }
     scs_get_info(work, sol, info, r, iter);
+		scs_printf("into scs_get_solution %s  \n",info->status);
 }
 
 /* LCOV_EXCL_START */
@@ -1856,6 +1858,7 @@ scs_int scs_solve(
         scs_special_print(print_mode, stderr, "ERROR: SCS_NULL input\n");
         return SCS_FAILED;
     }
+		scs_printf("scs_solve E1\n");
     /* initialize ctrl-c support */
     startInterruptListener();
     scs_tic(&solveTimer);
@@ -1868,22 +1871,26 @@ scs_int scs_solve(
     /* scs: */
     for (i = 0; i < work->stgs->max_iters && scs_toc_quiet(&solveTimer) < max_runtime_millis; ++i) {
         memcpy(work->u_prev, work->u, work->l * sizeof (scs_float));
+		    scs_printf("scs_solve loop linsys %d 1\n",i);
 
         if (scs_project_lin_sys(work, i) < 0) {
             return scs_failure(work, work->m, work->n, sol, info, SCS_FAILED,
                     "error in projectLinSys", "Failure", print_mode);
         }
+		    scs_printf("scs_solve loop project_cone 1\n");
         if (scs_project_cones(work, cone, i) < 0) {
             return scs_failure(work, work->m, work->n, sol, info, SCS_FAILED,
                     "error in projectCones", "Failure", print_mode);
         }
 
+		    scs_printf("scs_solve loop dual_vars 1\n");
         scs_update_dual_vars(work);
 
         if (isInterrupted()) {
             return scs_failure(work, work->m, work->n, sol, info, SCS_SIGINT, "Interrupted",
                     "Interrupted", print_mode);
         }
+		    scs_printf("scs_solve loop calc_residuals 1\n");
         if (i % SCS_CONVERGED_INTERVAL == 0) {
             scs_calc_residuals(work, &r, i);
             if (work->stgs->do_record_progress) scs_record_progress_data(info, &r, work, &solveTimer, i);
@@ -1895,6 +1902,7 @@ scs_int scs_solve(
             scs_print_summary(work, i, &r, &solveTimer);
         }
     }
+		scs_printf("scs_solve end loop %d 1\n",i);
     if (work->stgs->verbose) {
         scs_calc_residuals(work, &r, i);
         scs_print_summary(work, i, &r, &solveTimer);
@@ -2082,9 +2090,9 @@ scs_int superscs_solve(
     q_to_power_iter_times_nrmR0 *= nrm_R_0;
 
     /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-     * 
-     * MAIN SUPER SCS LOOP 
-     * 
+     *
+     * MAIN SUPER SCS LOOP
+     *
      * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ */
     for (i = 0; i < settings->max_iters
             && scs_toc_quiet(&solveTimer) < work->stgs->max_time_milliseconds; ++i) {
@@ -2158,8 +2166,8 @@ scs_int superscs_solve(
                 }
                 work->stepsize = 2.0;
 
-                /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
-                 *   Line search 
+                /* ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+                 *   Line search
                  *   Main computational burden: 1 projection
                  * ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ */
                 for (j_iter_ls = 0; j_iter_ls < settings->ls; ++j_iter_ls) {
@@ -2229,7 +2237,7 @@ scs_int superscs_solve(
     if (settings->verbose)
         scs_print_footer(data, cone, sol, work, info); /* LCOV_EXCL_LINE */
     endInterruptListener();
-
+    scs_printf("end of superScs  %s",info->status);
     return info->statusVal;
 }
 
@@ -2256,6 +2264,7 @@ ScsWork * scs_init(
     ScsWork * RESTRICT work;
     ScsTimer initTimer;
     startInterruptListener();
+		scs_printf("les tailles int float sont %d,%d",sizeof(scs_int),sizeof(scs_float));
     if (data == SCS_NULL
             || cone == SCS_NULL
             || info == SCS_NULL) {
@@ -2440,6 +2449,20 @@ static void scs_print_allocated_memory(
 }
 
 /* this just calls scs_init, scs_solve, and scs_finish */
+scs_int scsB(
+        const ScsData * RESTRICT data,
+        const ScsCone * RESTRICT cone,
+        ScsSolution * RESTRICT sol,
+        ScsInfo * RESTRICT info,
+				char* statusStr) {
+    scs_int status;
+	status=scs(data,cone,sol,info);
+
+	strcpy(statusStr,info->status);
+	scs_printf("statusStr  %s",statusStr);
+	return status;
+				}
+
 scs_int scs(
         const ScsData * RESTRICT data,
         const ScsCone * RESTRICT cone,
@@ -2455,7 +2478,7 @@ scs_int scs(
     ScsWork *work = scs_init(data, cone, info);
     scs_int print_mode = data->stgs->do_override_streams;
     FILE * stream = data->stgs->output_stream;
-
+    scs_printf("entering scs\n");
     if (work != SCS_NULL) {
         if (work->stgs->do_super_scs) {
             /* solve with SuperSCS*/
@@ -2464,11 +2487,14 @@ scs_int scs(
                 scs_compute_allocated_memory(work, cone, data, info);
                 scs_print_allocated_memory(data, info);
             }
+            scs_printf("into super_scs \n");
             superscs_solve(work, data, cone, sol, info);
-        } else {
+						scs_printf("end of super_scs  %s  \n",info->status);
+					} else {
             /* solve with SCS */
             if (work->stgs->verbose > 0)
                 scs_special_print(print_mode, stream, "Running Standard SCS...\n");
+            scs_printf("into standard scs \n");
             scs_solve(work, data, cone, sol, info);
         }
         status = info->statusVal;
@@ -2477,6 +2503,7 @@ scs_int scs(
                 SCS_FAILED, "could not initialize work", "Failure", print_mode);
     }
     scs_finish(work);
+		scs_printf("end of Scs  %s  \n",info->status);
     return status;
 }
 
@@ -2549,4 +2576,3 @@ ScsData * scs_init_data() {
 
     return data;
 }
-
